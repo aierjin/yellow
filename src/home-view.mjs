@@ -1,0 +1,1 @@
+export function homeViewSample(from,yaw,pitch,t){const u=Math.max(0,Math.min(1,t)),ease=u*u*(3-2*u),turn=Math.atan2(Math.sin(yaw-from.yaw),Math.cos(yaw-from.yaw));return {yaw:from.yaw+turn*ease,pitch:from.pitch+(pitch-from.pitch)*ease};}

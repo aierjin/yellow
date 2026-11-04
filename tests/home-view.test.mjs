@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {homeViewSample} from '../src/home-view.mjs';
+test('home return uses shortest yaw arc and smooth endpoints',()=>{const from={yaw:Math.PI*4+.2,pitch:Math.PI/2};const first=homeViewSample(from,.1,.65,0),last=homeViewSample(from,.1,.65,1);assert.equal(first.yaw,from.yaw);assert.equal(first.pitch,from.pitch);assert.ok(Math.abs(last.yaw-from.yaw)<.2);assert.equal(last.pitch,.65);});
