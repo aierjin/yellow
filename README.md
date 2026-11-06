@@ -26,7 +26,7 @@ A self-contained Windows runtime (`runtime/`) is included for offline play — j
 
 ## Features
 
-- **58 levels** across 5 chapters, each with a guaranteed optimal-move solution.
+- **60 levels** across 5 chapters, each with a guaranteed optimal-move solution.
 - **Interactive tutorial** on the first level; contextual help cards from level 2 onward.
 - **Star progress** saved in the browser, keyed by origin; a hidden finale unlocks past 280 stars.
 - Full 3D scene, character animation and a complete ending music track.
