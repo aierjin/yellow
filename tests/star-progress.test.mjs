@@ -1,3 +1,5 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {readStars,recordStars,totalStars,endingUnlocked} from '../src/star-progress.mjs';
+import test from 'node:test';import assert from 'node:assert/strict';import {readStars,recordStars,totalStars,endingUnlocked,migrateStars} from '../src/star-progress.mjs';
 test('best stars accumulate without loss, half stars, strict ending threshold',()=>{let b=recordStars({},1,4,3);assert.equal(b[1],4.5);b=recordStars(b,1,6,3);assert.equal(b[1],4.5);b=recordStars(b,1,3,3);assert.equal(b[1],5);const all=Object.fromEntries(Array.from({length:56},(_,i)=>[i+1,5]));assert.equal(totalStars(all),280);assert.equal(endingUnlocked(all),false);assert.equal(endingUnlocked({...all,57:.5}),true);});
-test('progress rejects malformed and impossible scores',()=>{assert.deepEqual(readStars({getItem:()=>'{bad'}),{});assert.deepEqual(readStars({getItem:()=>'{"1":4.5,"2":6,"3":1.2,"59":5}'}),{'1':4.5});});
+test('progress rejects malformed and impossible scores',()=>{assert.deepEqual(readStars({getItem:()=>'{bad'}),{});assert.deepEqual(readStars({getItem:()=>'{"1":4.5,"2":6,"3":1.2,"61":5}'}),{'1':4.5});});
+
+test('old final score moves to 60 once; new 58 survives later reloads',()=>{const values=new Map([['yellow-best-stars-v1',JSON.stringify({1:4,58:5})]]),storage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};assert.deepEqual(migrateStars(storage),{1:4,60:5});values.set('yellow-best-stars-v1',JSON.stringify({1:4,58:3,59:4,60:5}));assert.deepEqual(migrateStars(storage),{1:4,58:3,59:4,60:5});});

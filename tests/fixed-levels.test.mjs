@@ -1,10 +1,11 @@
+import {CHALLENGE_REPLACEMENTS} from '../src/challenge-replacements.mjs';
 import {withPracticeLimit} from '../src/completion-feedback.mjs';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {FIXED_LEVELS} from '../src/fixed-levels.mjs';import {LEVELS} from '../src/levels.js';
 import {Level,GameState,ChainReactionSystem,PathfindingSystem} from '../src/engine.js';import {searchLevel} from '../src/exact-search.mjs';import {solve,verifySolution} from '../src/solver.mjs';
 const play=(d,seq)=>{const l=new Level(d);for(const id of seq)ChainReactionSystem.apply(l.pillars,Math.floor((id-1)/d.cols),(id-1)%d.cols,4);return l;};
 test('39–46 have verified minima, gentle budgets, one or two fixed pillars and tips',()=>{
- assert.ok(LEVELS.length>=46);assert.equal(FIXED_LEVELS.length,8);assert.deepEqual(LEVELS.slice(38,46),FIXED_LEVELS.map(withPracticeLimit));
+ assert.ok(LEVELS.length>=46);assert.equal(FIXED_LEVELS.length,8);assert.deepEqual(LEVELS.slice(38,46),FIXED_LEVELS.map(d=>withPracticeLimit(CHALLENGE_REPLACEMENTS[d.number]??d)));
  for(const d of FIXED_LEVELS){assert.equal(d.rows,d.number<=41?3:4);assert.equal(d.end.pillar,undefined);assert.ok(d.end.edge);assert.ok(d.minMoves>=(d.rows===3?3:4));assert.ok(d.tip.length>8&&d.tip.length<50);assert.ok(d.discovery);
   const ids=d.pillars.flat().flatMap((p,i)=>p.fixed?[i+1]:[]);assert.ok(ids.length>=1&&ids.length<=2);assert.ok(d.solution.every(i=>!ids.includes(i)));
   assert.equal(searchLevel(d,d.minMoves).minMoves,d.minMoves);assert.equal(solve(new Level(d),{maxDepth:d.minMoves,maxStates:500000}).minClicks,d.minMoves);assert.ok(verifySolution(new Level(d),d.solution));

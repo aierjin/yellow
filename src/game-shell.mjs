@@ -1,4 +1,4 @@
-import {STAR_KEY,readStars,recordStars,totalStars,endingUnlocked} from './star-progress.mjs';
+import {STAR_KEY,readStars,migrateStars,recordStars,totalStars,endingUnlocked} from './star-progress.mjs';
 import {getLighting} from './lighting.mjs';
 import {renderCompletionRating} from './completion-feedback.mjs';
 import {LEVELS} from './levels.js';
@@ -11,22 +11,22 @@ import {LEVELS} from './levels.js';
 const lessons=[
  {title:'你的目标 · 归处',
   copy:'这是一段安静的旅程。你的目标，是从「起点」搭一条高低相连的路，通到发亮的「归处」。相邻石柱的高度差不超过一级，就能走上去。',
-  targets:[{kind:'button',id:'confirm'}],
+  targets:[],
   demo:svgRoute()},
  {title:'石柱上的数字',
   copy:'每根石柱顶上的大数字，是它「当前的高度」，不是编号。薄荷绿表示下一次会上升，橙红表示下一次会下降。',
   targets:[{kind:'pillar',index:4}]},
  {title:'点一下 · 十字联动',
-  copy:'点一下中央这根闪烁的石柱。',
+  copy:'点击箭头所指的中央石柱（第2行、第2列）。只需点一次。',
   targets:[{kind:'pillar',index:4,flashDigit:true}],
   interact:'pillar',event:'pillar'},
  {title:'撤销 · 重新开始',
   copy:'刚才点的那一下，让中央和四邻的柱子一起动了。点「撤销」把它收回去（按 Z 也行）；「重新开始」则一键回到本关初始局面（按 R）。',
-  targets:[{kind:'button',id:'undo'},{kind:'button',id:'reset'}],
+  targets:[{kind:'button',id:'undo'}],
   interact:'button:undo',event:'undo'},
  {title:'点一下的规律',
   copy:'小字附言：点一下石柱，它和上下左右相邻的柱子各升降一级，斜角不受影响。升到最高或降到 0 后，方向会自动反转。',
-  targets:[{kind:'pillar',index:0}],
+  targets:[],
   demo:svgBounce()},
  {title:'转动视角',
   copy:'按住画面空白处，左右拖动，环绕观察这片石林。',
@@ -45,7 +45,7 @@ const lessons=[
   targets:[{kind:'button',id:'hint-btn'}],
   interact:'button:hint',event:'hint'},
  {title:'点击正确石柱',
-  copy:'现在点击这根闪烁的石柱，它会让路连向归处。',
+  copy:'点击箭头所指的石柱（第1行、第2列），让路线接到归处。',
   targets:[{kind:'pillar',index:1,flashDigit:true}],
   interact:'pillar',event:'pillar'},
  {title:'累计星星 · 最终结局',copy:'星星旁的数字是累计星数，取每一关最好成绩相加。只有累计超过280颗星星，才能触发最终结局。重玩可以提高本关星级。',targets:[{kind:'button',id:'total-stars'}]},
@@ -60,7 +60,7 @@ function svgBounce(){return `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org
 
 export function createGameShell({levels,start,next,setGuideTargets,getLevelIndex}){
  const $=id=>document.getElementById(id),cover=$('cover'),game=$('game-shell'),guide=$('inline-guide');
- let best=readStars(localStorage);
+ let best=migrateStars(localStorage);
  function refreshStars(){const total=totalStars(best);$('total-stars').textContent='★ '+total;$('picker-stars').textContent='★ '+total;$('total-stars').setAttribute('aria-label','累计 '+total+' 颗星');document.querySelectorAll('.level-choice').forEach((b,i)=>{b.querySelector('.level-best').textContent=(best[i+1]??0)+' ★';});}
  let step=0,completedIndex=0,referenceMode=false;
  const referenceLessons=[lessons[0],lessons[1],{title:"十字联动",copy:"点击一根石柱，它和上下左右相邻的石柱各升降一级，斜角不受影响。到达最高或最低高度后，升降方向自动反转。",demo:svgBounce()},{title:"撤销与重新开始",copy:"撤销可收回上一步操作；重新开始会恢复本关的初始棋盘。键盘也可以使用 Z 撤销、R 重新开始。"},{title:"观察与提示",copy:"拖动画面可环绕观察，点击俯视查看高度，恢复视角可回到默认角度。遇到困难时，点击提示查看下一步。"},{title:"连接道路",copy:"相邻石柱高度差不超过一级时可以通行。搭好从起点到归处的路线后，点击连接道路。有限步要求的关卡还需要在步数范围内完成。"},lessons[10]];
@@ -106,7 +106,7 @@ export function createGameShell({levels,start,next,setGuideTargets,getLevelIndex
   $('guide-next').hidden=isInteract;
   const hintDo=$('guide-hint-do');
   hintDo.hidden=!isInteract;
-  hintDo.textContent=lesson.interact==='drag'?'按住空白处拖动 · 完成后自动继续':lesson.interact==='pillar'?'点击闪烁的石柱 · 完成后自动继续':'点击闪烁的按钮 · 完成后自动继续';
+  hintDo.textContent=lesson.interact==='drag'?'按住空白处拖动 · 完成后自动继续':lesson.interact==='pillar'?'点击箭头所指石柱 · 完成后自动继续':'点击箭头所指按钮 · 完成后自动继续';
   document.body.classList.toggle('guide-swipe',!referenceMode&&lesson.interact==='drag');
   if(setGuideTargets)setGuideTargets(referenceMode?[]:lesson.targets||[]);
  }
@@ -126,6 +126,6 @@ export function createGameShell({levels,start,next,setGuideTargets,getLevelIndex
  return {paused:()=>document.body.classList.contains('ending-active')||!cover.hidden||!guide.hidden||$('level-picker').open||$('completion').open,
   guideInteract:()=>!referenceMode&&!guide.hidden?(lessons[step]?.interact||null):null,
   guideEvent,
-  endingEligible:(index,moves,min)=>index===57&&endingUnlocked(recordStars({...best},index+1,moves,min)),
- complete(index,moves,min,cinematic=false){completedIndex=index;best=recordStars(best,index+1,moves,min);try{localStorage.setItem(STAR_KEY,JSON.stringify(best));}catch{}refreshStars();const score=renderCompletionRating($('completion-rating'),moves,min);$('completion-retry-note').hidden=score.optimal;const tip=levels[index].tip;$('completion-tip').hidden=!tip;$('completion-tip').textContent=tip?'tip：'+tip:'';$('completion-title').textContent=index===levels.length-1?'旅程完成':index===49?'第四章完成':index===29?'第三章完成':index===19?'第二章完成':index===9?'第一章完成':'通关成功';$('completion-detail').textContent=`第 ${index+1} 关 · 用了 ${moves} 步 · 最少 ${min} 步`+(index===57?(endingUnlocked(best)?' · 终章动画已解锁':' · 超过280颗星可解锁终章动画'):'');if(index===57&&endingUnlocked(best))window.dispatchEvent(new CustomEvent('yellow:ending-ready',{detail:{stars:totalStars(best)}}));$('next-level').textContent=index===levels.length-1?'重走旅程 →':`进入第 ${index+2} 关 →`;if(!cinematic)$('completion').showModal();}}
+  endingEligible:(index,moves,min)=>index===levels.length-1&&endingUnlocked(recordStars({...best},index+1,moves,min)),
+ complete(index,moves,min,cinematic=false){completedIndex=index;best=recordStars(best,index+1,moves,min);try{localStorage.setItem(STAR_KEY,JSON.stringify(best));}catch{}refreshStars();const score=renderCompletionRating($('completion-rating'),moves,min);$('completion-retry-note').hidden=score.optimal;const tip=levels[index].tip;$('completion-tip').hidden=!tip;$('completion-tip').textContent=tip?'tip：'+tip:'';$('completion-title').textContent=index===levels.length-1?'旅程完成':index===49?'第四章完成':index===29?'第三章完成':index===19?'第二章完成':index===9?'第一章完成':'通关成功';$('completion-detail').textContent=`第 ${index+1} 关 · 用了 ${moves} 步 · 最少 ${min} 步`+(index===levels.length-1?(endingUnlocked(best)?' · 终章动画已解锁':' · 超过280颗星可解锁终章动画'):'');if(index===levels.length-1&&endingUnlocked(best))window.dispatchEvent(new CustomEvent('yellow:ending-ready',{detail:{stars:totalStars(best)}}));$('next-level').textContent=index===levels.length-1?'重走旅程 →':`进入第 ${index+2} 关 →`;if(!cinematic)$('completion').showModal();}}
 }

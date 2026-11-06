@@ -1,3 +1,4 @@
+import {updateGuidePointer} from './guide-pointer.mjs';
 import {animateEnding,showStarField,flyStars} from './ending-scene.mjs';
 import {boardKey,continuation} from './hint-route.mjs';
 import {homeViewSample} from './home-view.mjs';
@@ -304,13 +305,13 @@ function setHeight(p,h){
 }
 function fixedPlatform(node, isEnd){
   const p=worldPoint(level,node), group=new THREE.Group();group.position.set(p.x,0,p.z);board.add(group);
-  box(group,WIDTH-.04,p.y+1.05,WIDTH-.04,0,(p.y-1.05)/2,0,isEnd?warm:rose);
+  box(group,WIDTH-.04,p.y+.95,WIDTH-.04,0,(p.y-1.15)/2,0,isEnd?warm:rose);
   box(group,WIDTH+.09,.1,WIDTH+.09,0,p.y-.05,0,cap);
   box(group,WIDTH+.04,.10,WIDTH+.04,0,-1.05,0,warm);
   fixedHeightMark(group,node.height);
   if(isEnd){portal(group,0,p.y,-.42,1.35);}
   else{
-    cylinder(group,.23,.025,0,p.y+.015,0,gold);
+    // Removed the colored pad under the character.
 
   }
   return p;
@@ -431,6 +432,9 @@ function updateUI(){
 }
 // 引导教学：把 targets 指定的石柱/按钮加上闪烁高亮，其余清除
 function setGuideTargets(targets){
+  document.getElementById('guide-pointer')?.setAttribute('hidden','');
+  selectedHint=-1;clearHoverPreview();
+  document.querySelectorAll('.pillar-key.highlight').forEach(b=>b.classList.remove('highlight'));
   const list=targets||[];
   for(const b of keyButtons)b.classList.remove('guide-flash','flash-digit');
   for(const id of ['undo','reset','confirm','hint-btn','top-view','rotate','menu-btn','tutorial-btn','total-stars'])document.getElementById(id)?.classList.remove('guide-flash');
@@ -505,14 +509,14 @@ function confirm(){
   phase='revealing';selectedHint=-1;clearHoverPreview();clearActiveGesture();
   homeTransition={from:{yaw:cameraState.yaw,pitch:cameraState.pitch},start:performance.now()};
   cameraState.top=false;
-  const segments=planRoute(level,level.number===58?game.getPath().slice(0,-1):game.getPath());
+  const segments=planRoute(level,level.number===LEVELS.length?game.getPath().slice(0,-1):game.getPath());
   segments.forEach(addRouteSegment);
   revealStart=performance.now();
   $('status-title').textContent='道路已连接';
   $('hint').textContent='';updateUI();
 }
 function beginWalking(){
-  const timeline=createWalkTimeline(level,level.number===58?game.getPath().slice(0,-1):game.getPath());
+  const timeline=createWalkTimeline(level,level.number===LEVELS.length?game.getPath().slice(0,-1):game.getPath());
   if(!timeline.segments.length){finishWalking();return;}
   walkTimeline=timeline;walkDistance=0;walkingStairs=false;
   walkHeading=timeline.segments[0].heading;
@@ -522,8 +526,8 @@ function beginWalking(){
   updateUI();
 }
 function finishWalking(){
- if(level.number===58&&shell?.endingEligible(levelIndex,game.clickCount,minMoves)){runFinalEnding();return;}
- if(level.number===58){phase='complete';$('status-title').textContent='抵达归处前';$('hint').textContent='';$('confirm').textContent='重走旅程';updateUI();shell?.complete(levelIndex,game.clickCount,minMoves);return;}
+ if(level.number===LEVELS.length&&shell?.endingEligible(levelIndex,game.clickCount,minMoves)){runFinalEnding();return;}
+ if(level.number===LEVELS.length){phase='complete';$('status-title').textContent='抵达归处前';$('hint').textContent='';$('confirm').textContent='重走旅程';updateUI();shell?.complete(levelIndex,game.clickCount,minMoves);return;}
  phase='exiting';$('status-title').textContent='到达终点';$('hint').textContent='';updateUI();
 }
 async function runFinalEnding(){
@@ -545,7 +549,7 @@ async function runFinalEnding(){
 function clearGuideTargetsForEnding(){clearHoverPreview();clearActiveGesture();document.body.classList.add('ending-active');}
 function updatePursuit(delta){
  if(!targetCharacter||!character)return;
- if(level.number===58)return;
+ if(level.number===LEVELS.length)return;
  if(!['walking','exiting'].includes(phase))return;
  const progress=walkTimeline?.totalDistance?walkDistance/walkTimeline.totalDistance:0;
  advancePursuit(pursuit,delta,progress,phase==='exiting');
@@ -762,7 +766,7 @@ function frame(now){
       for(const a of boardTween.affected)setHeight(pillars[a.row*level.cols+a.col],a.fromHeight+(a.toHeight-a.fromHeight)*ease);
       if(t>=1){boardTween=null;phase='playing';updateUI();}
     }
-    updateCamera();renderer.render(scene,camera);return;
+    updateCamera();updateGuidePointer();renderer.render(scene,camera);return;
   }
   if(homeTransition){
     const t=reduced?1:Math.min(1,(now-homeTransition.start)/850);
@@ -807,6 +811,7 @@ function frame(now){
   if(selectedHint>=0&&now>hintUntil){selectedHint=-1;updateUI();}
   updatePursuit(delta);
   updateCamera();
+  updateGuidePointer();
   if(targetCharacter)targetCharacter.update(cameraState.yaw);
   if(character&&phase!=='finale')character.update(delta*1.05,now/1000,phase==='walking',walkingStairs,cameraState.yaw);
   renderer.render(scene,camera);
