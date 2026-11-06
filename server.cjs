@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { exec } = require('node:child_process');
 const root = __dirname;
-const basePort = Number(process.env.PORT || 8766);
+const basePort = Number(process.env.PORT || 8816);
 const autoOpen = process.env.NO_OPEN !== '1';
 const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.glb':'model/gltf-binary','.gltf':'model/gltf+json','.fbx':'application/octet-stream','.txt':'text/plain; charset=utf-8','.mp3':'audio/mpeg'};
 
