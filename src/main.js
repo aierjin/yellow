@@ -19,7 +19,7 @@ import { getLighting, interpolateLighting, rgbToCss } from './lighting.mjs';
 import { createCameraState, dragCamera, dragOrbit, toggleTopView, restoreCamera } from './camera-state.mjs';
 import { createGesture, moveGesture, cancelGesture, releaseGesture } from './pointer-gesture.mjs';
 import { previewOperation } from './preview.mjs';
-import { playPillarSound, playRouteSound } from './game-sounds.mjs';
+import { playPillarSound, playRouteSound, playUndoSound, playHintSound } from './game-sounds.mjs?v=2';
 
 const $ = id => document.getElementById(id);
 let shell=null;
@@ -468,6 +468,7 @@ function undo(){
   const gi=shell?.guideInteract?.();
   if(shell?.paused()&&gi!=='button:undo')return; // 引导中仅允许教学指定的撤销
   if(phase!=='playing'||!game.undo())return;
+  playUndoSound();
   selectedHint=-1;clearHoverPreview();clearActiveGesture();
   pillars.forEach(p=>setHeight(p,level.pillars[p.row][p.col].height));syncDestination();
   $('status-title').textContent='连接起点和终点';
@@ -597,7 +598,12 @@ const hintPlans=new Map();
 function hint(){
   if(phase!=='playing')return;
   const gi=shell?.guideInteract?.();if(shell?.paused()&&gi!=='button:hint')return;
-  if(PathfindingSystem.hasPath(level)){$('hint').textContent='路已经搭好了，点击「连接道路」看石阶出现。';if(gi==='button:hint')shell.guideEvent('hint');return;}
+  if(PathfindingSystem.hasPath(level)){
+    playHintSound();
+    $('hint').textContent='路已经搭好了，点击「连接道路」看石阶出现。';
+    if(gi==='button:hint')shell.guideEvent('hint');
+    return;
+  }
   // Bound the search so exploratory taps cannot freeze a mobile browser.
   const queue=[{level:level.clone(),first:null,depth:0,steps:[]}],visited=new Set();
   const source=LEVELS[levelIndex], key=levelIndex+'|'+boardKey(level), remaining=level.maxClicks==null?Infinity:level.maxClicks-game.clickCount;
@@ -615,7 +621,11 @@ function hint(){
       if(queue.length<2500)queue.push({level:next,first,depth:node.depth+1,steps:[...node.steps,r*level.cols+c+1]});
     }
   }
-  if(found!==null){selectedHint=found;hintUntil=performance.now()+5000;$('hint').textContent=`试试第 ${Math.floor(found/level.cols)+1} 行、第 ${found%level.cols+1} 列的石柱。`;}
+  if(found!==null){
+    playHintSound();
+    selectedHint=found;hintUntil=performance.now()+5000;
+    $('hint').textContent=`试试第 ${Math.floor(found/level.cols)+1} 行、第 ${found%level.cols+1} 列的石柱。`;
+  }
   else $('hint').textContent='暂未找到短路线，可以撤销几步，或重新开始。';
   updateUI();if(gi==='button:hint'&&found!==null)shell.guideEvent('hint');
 }

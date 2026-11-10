@@ -64,3 +64,19 @@ export function playRouteSound() {
     });
   });
 }
+
+export function playUndoSound() {
+  play(audio => {
+    const start = audio.currentTime;
+    tone(audio, 440, start, 0.12, 0.045);
+    tone(audio, 329.63, start + 0.07, 0.16, 0.04);
+  });
+}
+
+export function playHintSound() {
+  play(audio => {
+    const start = audio.currentTime;
+    tone(audio, 523.25, start, 0.18, 0.045);
+    tone(audio, 659.25, start + 0.09, 0.23, 0.035);
+  });
+}
