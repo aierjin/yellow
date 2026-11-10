@@ -174,10 +174,10 @@ export const FIXED_LEVELS = [
   {
     "number": 41,
     "name": "留住一段",
-    "rows": 3,
-    "cols": 3,
+    "rows": 4,
+    "cols": 4,
     "maxHeight": 4,
-    "type": "normal",
+    "type": "challenge",
     "start": {
       "edge": "bottom",
       "index": 0,
@@ -185,42 +185,15 @@ export const FIXED_LEVELS = [
     },
     "end": {
       "edge": "top",
-      "index": 2,
+      "index": 3,
       "height": 0
     },
+    "maxClicks": 7,
+    "showHint": false,
     "pillars": [
       [
         {
-          "height": 1,
-          "direction": -1
-        },
-        {
-          "height": 1,
-          "direction": 1
-        },
-        {
-          "height": 4,
-          "direction": -1
-        }
-      ],
-      [
-        {
-          "height": 4,
-          "direction": -1
-        },
-        {
-          "height": 3,
-          "direction": -1
-        },
-        {
           "height": 2,
-          "direction": 1,
-          "fixed": true
-        }
-      ],
-      [
-        {
-          "height": 4,
           "direction": -1
         },
         {
@@ -229,31 +202,93 @@ export const FIXED_LEVELS = [
         },
         {
           "height": 1,
+          "direction": -1,
+          "fixed": true
+        },
+        {
+          "height": 4,
+          "direction": -1
+        }
+      ],
+      [
+        {
+          "height": 3,
           "direction": 1
+        },
+        {
+          "height": 0,
+          "direction": 1
+        },
+        {
+          "height": 3,
+          "direction": 1
+        },
+        {
+          "height": 1,
+          "direction": 1
+        }
+      ],
+      [
+        {
+          "height": 3,
+          "direction": -1
+        },
+        {
+          "height": 1,
+          "direction": 1
+        },
+        {
+          "height": 4,
+          "direction": -1
+        },
+        {
+          "height": 4,
+          "direction": -1
+        }
+      ],
+      [
+        {
+          "height": 1,
+          "direction": 1
+        },
+        {
+          "height": 1,
+          "direction": -1
+        },
+        {
+          "height": 1,
+          "direction": -1
+        },
+        {
+          "height": 1,
+          "direction": -1
         }
       ]
     ],
-    "tip": "固定柱能保住自己的高度，但接好的邻柱仍需留意联动。",
-    "discovery": "先找到固定石台，再比较它两侧的高差。",
-    "minMoves": 3,
+    "minMoves": 6,
     "solution": [
       2,
-      3,
-      3
+      8,
+      8,
+      8,
+      13,
+      14
     ],
-    "coverageBudget": 4,
+    "coverageBudget": 6,
     "fixedEvidence": {
       "ids": [
-        6
+        3
       ],
       "allNecessaryInBudget": true,
       "unfreezeEachBreaksExample": true,
       "examplePath": [
-        7,
-        8,
-        5,
+        13,
+        9,
+        10,
         6,
-        3
+        7,
+        3,
+        4
       ]
     }
   },
