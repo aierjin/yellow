@@ -18,7 +18,7 @@ function stairHeight(segment,t){
   return segment.low.y+(segment.high.y-segment.low.y)*climbed/steps;
 }
 
-export function createWalkTimeline(level, path, speed = 1.512) {
+export function createWalkTimeline(level, path, speed = 1.9656) {
   if (!(speed > 0)) throw new Error('Walking speed must be positive');
   let distance = 0;
   const segments = planRoute(level, path).map((segment, index) => {
