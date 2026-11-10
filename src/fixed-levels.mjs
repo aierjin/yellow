@@ -189,7 +189,6 @@ export const FIXED_LEVELS = [
       "height": 0
     },
     "maxClicks": 7,
-    "showHint": false,
     "pillars": [
       [
         {

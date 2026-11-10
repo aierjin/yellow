@@ -9,7 +9,7 @@ test('39–46 have verified minima, move limits and one or two fixed pillars',()
  for(const d of FIXED_LEVELS){assert.equal(d.rows,d.number<41?3:4);assert.equal(d.end.pillar,undefined);assert.ok(d.end.edge);assert.ok(d.minMoves>=(d.rows===3?3:4));
   if(d.number===41){
    assert.equal(d.cols,4);assert.equal(d.minMoves,6);assert.equal(d.maxClicks,7);
-   assert.equal(d.showHint,false);assert.equal(d.tip,undefined);assert.equal(d.discovery,undefined);
+   assert.equal(d.tip,undefined);assert.equal(d.discovery,undefined);
   }else{assert.ok(d.tip.length>8&&d.tip.length<50);assert.ok(d.discovery);}
   const ids=d.pillars.flat().flatMap((p,i)=>p.fixed?[i+1]:[]);assert.ok(ids.length>=1&&ids.length<=2);assert.ok(d.solution.every(i=>!ids.includes(i)));
   assert.equal(searchLevel(d,d.minMoves).minMoves,d.minMoves);assert.equal(solve(new Level(d),{maxDepth:d.minMoves,maxStates:500000}).minClicks,d.minMoves);assert.ok(verifySolution(new Level(d),d.solution));

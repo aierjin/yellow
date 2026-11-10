@@ -416,9 +416,7 @@ function updateUI(){
     $('confirm').textContent='重试加载人物';
     $('hint').textContent='人物图片加载失败，点击下方按钮重试。';
   }
-  const showHint = LEVELS[levelIndex].showHint !== false;
-  $('hint-btn').hidden = !showHint;
-  $('hint-btn').disabled = !showHint || phase!=='playing';
+  $('hint-btn').disabled=phase!=='playing';
   const n = level.rows * level.cols;
   for(let i=0;i<n;i++){
     const p=level.pillars[Math.floor(i/level.cols)][i%level.cols], b=keyButtons[i];
@@ -598,7 +596,7 @@ function nextLevel(){
 
 const hintPlans=new Map();
 function hint(){
-  if(phase!=='playing'||LEVELS[levelIndex].showHint===false)return;
+  if(phase!=='playing')return;
   const gi=shell?.guideInteract?.();if(shell?.paused()&&gi!=='button:hint')return;
   if(PathfindingSystem.hasPath(level)){
     playHintSound();
