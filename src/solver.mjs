@@ -15,7 +15,7 @@ function keyOf(pillars) {
 
 /** 深拷贝柱子数组为纯对象 */
 function clonePillars(pillars) {
-  return pillars.map(r => r.map(p => ({ height: p.height, direction: p.direction, fixed: p.fixed, blocked: p.blocked, sync: p.sync })));
+  return pillars.map(r => r.map(p => ({ ...p })));
 }
 
 /** 从纯对象数组构造 Level（供 hasPath 判定） */

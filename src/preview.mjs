@@ -1,4 +1,4 @@
-import { ChainReactionSystem, PathfindingSystem } from './engine.js';
+import { ChainReactionSystem, PathfindingSystem, allowsBridgeExit, edgeAxis } from './engine.js';
 
 const pillarNode = (row, col, height) => ({ type: 'pillar', row, col, height });
 const nodeKey = node => node.type === 'pillar' ? `p:${node.row}:${node.col}` : node.type;
@@ -14,14 +14,16 @@ export function boardConnections(level) {
       const p = level.pillars[row][col];
       if(p.blocked)continue;
       const a = pillarNode(row, col, p.height);
-      if (row + 1 < level.rows && !level.pillars[row+1][col].blocked) add(a, pillarNode(row + 1, col, level.pillars[row + 1][col].height));
-      if (col + 1 < level.cols && !level.pillars[row][col+1].blocked) add(a, pillarNode(row, col + 1, level.pillars[row][col + 1].height));
+      const below = level.pillars[row + 1]?.[col];
+      if (below && !below.blocked && allowsBridgeExit(p, 'col') && allowsBridgeExit(below, 'col')) add(a, pillarNode(row + 1, col, below.height));
+      const right = level.pillars[row][col + 1];
+      if (right && !right.blocked && allowsBridgeExit(p, 'row') && allowsBridgeExit(right, 'row')) add(a, pillarNode(row, col + 1, right.height));
     }
   }
   const entry = PathfindingSystem._edgePillar(level, level.start);
   const exit = PathfindingSystem._edgePillar(level, level.end);
-  if (entry) add({ type: 'start', height: level.start.height }, pillarNode(entry.row, entry.col, entry.height));
-  if (exit && !level.end.pillar) add(pillarNode(exit.row, exit.col, exit.height), { type: 'end', height: level.end.height });
+  if (entry && !entry.blocked && (level.start.pillar || allowsBridgeExit(entry, edgeAxis(level.start.edge)))) add({ type: 'start', height: level.start.height }, pillarNode(entry.row, entry.col, entry.height));
+  if (exit && !exit.blocked && !level.end.pillar && allowsBridgeExit(exit, edgeAxis(level.end.edge))) add(pillarNode(exit.row, exit.col, exit.height), { type: 'end', height: level.end.height });
   return connections;
 }
 

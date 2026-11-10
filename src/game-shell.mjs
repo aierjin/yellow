@@ -58,9 +58,9 @@ const lessons=[
 function svgRoute(){return `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg"><path d="M30 120H110V90H200V60H300" stroke="#d6a36b" stroke-width="16" fill="none"/><circle cx="30" cy="120" r="9" fill="#9cea9f"/><circle cx="300" cy="60" r="9" fill="#e65336"/><text x="180" y="145" text-anchor="middle" font-size="13" fill="#604463">起点 —— 连一条高度差 ≤ 1 的路 —— 归处</text></svg>`;}
 function svgBounce(){return `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg"><rect x="141" y="40" width="78" height="80" rx="5" fill="#d6a36b"/><text x="180" y="28" text-anchor="middle" font-size="24" fill="#604463">4</text><text x="180" y="140" text-anchor="middle" font-size="13" fill="#604463">0 → 1 → 2 → 3 → 4 → 3 → 2 → 1</text></svg>`;}
 
-export function createGameShell({levels,start,next,setGuideTargets,getLevelIndex}){
+export function createGameShell({levels,start,next,setGuideTargets,getLevelIndex,demo=false}){
  const $=id=>document.getElementById(id),cover=$('cover'),game=$('game-shell'),guide=$('inline-guide');
- let best=migrateStars(localStorage);
+ let best=demo?{}:migrateStars(localStorage);
  function refreshStars(){const total=totalStars(best);$('total-stars').textContent='★ '+total;$('picker-stars').textContent='★ '+total;$('total-stars').setAttribute('aria-label','累计 '+total+' 颗星');document.querySelectorAll('.level-choice').forEach((b,i)=>{b.querySelector('.level-best').textContent=(best[i+1]??0)+' ★';});}
  let step=0,completedIndex=0,referenceMode=false;
  const referenceLessons=[lessons[0],lessons[1],{title:"十字联动",copy:"点击一根石柱，它和上下左右相邻的石柱各升降一级，斜角不受影响。到达最高或最低高度后，升降方向自动反转。",demo:svgBounce()},{title:"撤销与重新开始",copy:"撤销可收回上一步操作；重新开始会恢复本关的初始棋盘。键盘也可以使用 Z 撤销、R 重新开始。"},{title:"观察与提示",copy:"拖动画面可环绕观察，点击俯视查看高度，恢复视角可回到默认角度。遇到困难时，点击提示查看下一步。"},{title:"连接道路",copy:"相邻石柱高度差不超过一级时可以通行。搭好从起点到归处的路线后，点击连接道路。有限步要求的关卡还需要在步数范围内完成。"},lessons[10]];
@@ -69,9 +69,9 @@ export function createGameShell({levels,start,next,setGuideTargets,getLevelIndex
  // 清除引导高亮（交给 main.js 完成）
  function clearGuide(){guide.hidden=true;document.body.classList.remove('guide-swipe');if(setGuideTargets)setGuideTargets([]);document.body.classList.remove('guiding');}
  // 进入关卡：第一关且尚未教学时，启动关卡内引导；否则聚焦确认按钮
- function enter(index){$('level-picker').close();updateCover(false);$('resume-game').hidden=false;start(index);if(index===0)startGuide();else {clearGuide();$('confirm').focus();}}
+ function enter(index){$('level-picker').close();updateCover(false);$('resume-game').hidden=false;start(index);if(index===0&&!demo)startGuide();else {clearGuide();$('confirm').focus();}}
  $('start-game').onclick=()=>enter(0);
- $('resume-game').onclick=()=>{if(getLevelIndex()===0){enter(0);return;}updateCover(false);clearGuide();$('confirm').focus();};
+ $('resume-game').onclick=()=>{if(getLevelIndex()===0&&!demo){enter(0);return;}updateCover(false);clearGuide();$('confirm').focus();};
  $('menu-btn').onclick=()=>{clearGuide();updateCover(true);};
  const openPicker=()=>{closeGuide();refreshStars();$('level-picker').showModal();};$('choose-level').onclick=openPicker;$('game-choose-level').onclick=openPicker;
  $('close-picker').onclick=()=>$('level-picker').close();
@@ -81,7 +81,7 @@ export function createGameShell({levels,start,next,setGuideTargets,getLevelIndex
   if(i>0&&chapterOf(i)!==chapterOf(i-1)){const gap=document.createElement('div');gap.className='chapter-gap';gap.setAttribute('aria-hidden','true');$('level-grid').append(gap);}
   const button=document.createElement('button');button.className='level-choice';button.setAttribute('aria-label',`第 ${i+1} 关 ${level.name}`);
   const n=document.createElement('strong');n.textContent=String(i+1).padStart(2,'0');
-  const label=document.createElement('span');label.textContent=i===0?'教学':level.maxClicks?`限 ${level.maxClicks} 步`:`${level.rows} × ${level.cols}`;
+  const label=document.createElement('span');label.textContent=demo?level.name:i===0?'教学':level.maxClicks?`限 ${level.maxClicks} 步`:`${level.rows} × ${level.cols}`;
   const rating=document.createElement('small');rating.className='level-best';rating.textContent=(best[i+1]??0)+' ★';button.append(n,label,rating);const color=getLighting(i).backgroundColor;button.style.backgroundColor='#'+color.toString(16).padStart(6,'0');if(i>=52)button.style.color='#fff8eb';button.dataset.chapter=String(chapterOf(i));button.onclick=()=>enter(i);$('level-grid').append(button);
  }
 
@@ -120,12 +120,14 @@ export function createGameShell({levels,start,next,setGuideTargets,getLevelIndex
  $('guide-prev').onclick=()=>{if(step>0){step--;renderGuide();}};
  $('guide-skip').onclick=closeGuide;
  // 第一关重看实操教学，后续关卡显示说明卡片
- $('tutorial-btn').onclick=()=>{if(getLevelIndex()===0){start(0);startGuide();}else startGuide(true);};
+ if(demo)referenceLessons.push({title:'转向石桥',copy:'青色石桥每升降一级就转向 90°。直接点击或被邻柱带动都会转向。道路只能沿桥面方向通过，且相邻高度差仍不能超过一级。'});
+ $('tutorial-btn').onclick=()=>{if(getLevelIndex()===0&&!demo){start(0);startGuide();}else startGuide(true);};
  refreshStars();
- updateCover(true);
+ updateCover(!demo);
+ if(demo)$('resume-game').hidden=false;
  return {paused:()=>document.body.classList.contains('ending-active')||!cover.hidden||!guide.hidden||$('level-picker').open||$('completion').open,
   guideInteract:()=>!referenceMode&&!guide.hidden?(lessons[step]?.interact||null):null,
   guideEvent,
-  endingEligible:(index,moves,min)=>index===levels.length-1&&endingUnlocked(recordStars({...best},index+1,moves,min)),
- complete(index,moves,min,cinematic=false){completedIndex=index;best=recordStars(best,index+1,moves,min);try{localStorage.setItem(STAR_KEY,JSON.stringify(best));}catch{}refreshStars();const score=renderCompletionRating($('completion-rating'),moves,min);$('completion-retry-note').hidden=score.optimal;const tip=levels[index].tip;$('completion-tip').hidden=!tip;$('completion-tip').textContent=tip?'tip：'+tip:'';$('completion-title').textContent=index===levels.length-1?'旅程完成':index===49?'第四章完成':index===29?'第三章完成':index===19?'第二章完成':index===9?'第一章完成':'通关成功';$('completion-detail').textContent=`第 ${index+1} 关 · 用了 ${moves} 步 · 最少 ${min} 步`+(index===levels.length-1?(endingUnlocked(best)?' · 终章动画已解锁':' · 超过280颗星可解锁终章动画'):'');if(index===levels.length-1&&endingUnlocked(best))window.dispatchEvent(new CustomEvent('yellow:ending-ready',{detail:{stars:totalStars(best)}}));$('next-level').textContent=index===levels.length-1?'重走旅程 →':`进入第 ${index+2} 关 →`;if(!cinematic)$('completion').showModal();}}
+  endingEligible:(index,moves,min)=>!demo&&index===levels.length-1&&endingUnlocked(recordStars({...best},index+1,moves,min)),
+ complete(index,moves,min,cinematic=false){completedIndex=index;best=recordStars(best,index+1,moves,min);if(!demo)try{localStorage.setItem(STAR_KEY,JSON.stringify(best));}catch{}refreshStars();const score=renderCompletionRating($('completion-rating'),moves,min);$('completion-retry-note').hidden=score.optimal;const tip=levels[index].tip;$('completion-tip').hidden=!tip;$('completion-tip').textContent=tip?'tip：'+tip:'';$('completion-title').textContent=demo?'Demo 通关':index===levels.length-1?'旅程完成':index===49?'第四章完成':index===29?'第三章完成':index===19?'第二章完成':index===9?'第一章完成':'通关成功';$('completion-detail').textContent=`第 ${index+1} 关 · 用了 ${moves} 步 · 最少 ${min} 步`+(!demo&&index===levels.length-1?(endingUnlocked(best)?' · 终章动画已解锁':' · 超过280颗星可解锁终章动画'):'');if(!demo&&index===levels.length-1&&endingUnlocked(best))window.dispatchEvent(new CustomEvent('yellow:ending-ready',{detail:{stars:totalStars(best)}}));$('next-level').textContent=index===levels.length-1?(demo?'回到 Demo 1 →':'重走旅程 →'):`进入第 ${index+2} 关 →`;if(!cinematic)$('completion').showModal();}}
 }
