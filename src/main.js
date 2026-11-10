@@ -5,9 +5,8 @@ import {homeViewSample} from './home-view.mjs';
 import { nextDirection } from './next-direction.mjs';
 import {createGameShell} from './game-shell.mjs';
 import * as THREE from 'three';
-import { Level, GameState, PathfindingSystem, ChainReactionSystem, bridgeAxis } from './engine.js';
-import { LEVELS as CAMPAIGN_LEVELS } from './levels.js';
-import { BRIDGE_DEMOS } from './bridge-demo-levels.mjs';
+import { Level, GameState, PathfindingSystem, ChainReactionSystem } from './engine.js';
+import { LEVELS } from './levels.js';
 import { planRoute, worldPoint, CELL, HEIGHT, WIDTH } from './route.mjs';
 import { loadStairCharacter } from './character.mjs';
 import { createWalkTimeline, sampleWalk, walkingFootY } from './walk-route.mjs';
@@ -23,9 +22,6 @@ import { previewOperation } from './preview.mjs';
 import { playPillarSound, playRouteSound, playUndoSound, playHintSound } from './game-sounds.mjs?v=2';
 
 const $ = id => document.getElementById(id);
-const demoNumber = Number(new URLSearchParams(location.search).get('bridge-demo'));
-const bridgeDemo = demoNumber === 1 || demoNumber === 2;
-const LEVELS = bridgeDemo ? BRIDGE_DEMOS : CAMPAIGN_LEVELS;
 let shell=null;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const scene = new THREE.Scene();
@@ -86,8 +82,6 @@ function applyLighting(cfg) {
 
 const mat = (color, extra={}) => new THREE.MeshStandardMaterial({color,roughness:1,metalness:0,...extra});
 const stone = mat(0xf4dfc3);
-const bridgeTeal = new THREE.MeshBasicMaterial({ color: 0x278f88 });
-const bridgeStripe = new THREE.MeshBasicMaterial({ color: 0xc9fff0 });
 const fixedStone = mat(0xbcae99), fixedCap = mat(0xe0d1b6), fixedTrim = mat(0x927f69);
 const cap = mat(0xfff1d9);
 const rose = mat(0xc98e82);
@@ -273,13 +267,6 @@ function makePillar(row,col){
     $('pillar-controls').appendChild(b);keyButtons.push(b);return {group,row,col,blocked:true,displayHeight:0};
   }
   const isFixed=level.pillars[row][col].fixed;
-  const bridge = level.pillars[row][col].bridge;
-  const bridgeMark = bridge ? new THREE.Group() : null;
-  if (bridgeMark) {
-    group.add(bridgeMark);
-    box(bridgeMark, WIDTH, .023, .31, 0, .012, 0, bridgeTeal).userData.pillar = row*level.cols+col;
-    box(bridgeMark, WIDTH-.12, .008, .055, 0, .028, 0, bridgeStripe);
-  }
   const syncMark=new THREE.Group();group.add(syncMark);
   if(level.pillars[row][col].sync)for(const x of [-.07,.07]){
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.105,.015,6,24),fixedTrim);
@@ -301,16 +288,12 @@ function makePillar(row,col){
   button.addEventListener('pointermove',()=>{if(!activeGesture&&phase==='playing')setHoverPreview(row*level.cols+col);});
   button.addEventListener('pointerleave',()=>{if(!activeGesture)clearHoverPreview();});
   $('pillar-controls').appendChild(button);keyButtons.push(button);
-  return {group,syncMark,bridge,bridgeMark,shaft,cornice,inset,pad,windowFront,windowSide,row,col,ticks:heightTicks(group),displayHeight:0};
+  return {group,syncMark,shaft,cornice,inset,pad,windowFront,windowSide,row,col,ticks:heightTicks(group),displayHeight:0};
 }
 function setHeight(p,h){
   if(p.blocked)return;
   if(p.syncMark)p.syncMark.position.y=h*HEIGHT+.012;
   const top=h*HEIGHT;
-  if (p.bridgeMark) {
-    p.bridgeMark.position.y = top;
-    p.bridgeMark.rotation.y = (h + (p.bridge === 'col' ? 1 : 0)) * Math.PI/2;
-  }
   p.shaft.scale.y=Math.max(.02,top-.10);p.shaft.position.y=(top-.10)/2;
   p.shaft.visible=top>.1;
   p.cornice.position.y=top-.04;p.cornice.visible=top>.1;
@@ -385,8 +368,8 @@ function reset(fromIndex){
   const sol = LEVELS[levelIndex].minMoves ? {solvable:true,minClicks:LEVELS[levelIndex].minMoves} : solve(level.clone(), { maxDepth: level.maxClicks != null ? level.maxClicks : 8 });
   minMoves = sol.solvable ? sol.minClicks : (level.maxClicks ?? 0);
   // 章节与关卡编号
-  $('chapter-name').textContent = bridgeDemo ? level.name : CHAPTER_NAME;
-  $('chapter-tag').textContent = bridgeDemo ? 'Demo '+(levelIndex+1)+' · '+level.name : String(levelIndex+1).padStart(2,'0') + ' · ' + CHAPTER_NAME;
+  $('chapter-name').textContent = CHAPTER_NAME;
+  $('chapter-tag').textContent = String(levelIndex+1).padStart(2,'0') + ' · ' + CHAPTER_NAME;
   $('level-number').textContent = String(levelIndex+1).padStart(2,'0');
   document.body.classList.remove('complete');
   $('status-title').textContent='连接起点和终点';
@@ -443,8 +426,7 @@ function updateUI(){
     b.querySelector('.height-label').textContent='';
     b.querySelector('.direction').textContent='';
     b.setAttribute('data-tint',p.fixed?'fixed':nextDirection(p,level.maxHeight)===1?'up':'down');
-    const bridgeLabel = p.bridge ? `转向石桥，沿棋盘${bridgeAxis(p)==='row'?'行':'列'}通行，` : '';
-    b.setAttribute('aria-label',`${level.end.pillar?.row===Math.floor(i/level.cols)&&level.end.pillar?.col===i%level.cols?'归处，':''}${p.sync?'同步柱，':''}${bridgeLabel}第${Math.floor(i/level.cols)+1}行第${i%level.cols+1}列石柱，高度${p.height}，${p.fixed?'固定高度，不可点击':'下一次'+(nextDirection(p,level.maxHeight)===1?'上升':'下降')}`);
+    b.setAttribute('aria-label',`${level.end.pillar?.row===Math.floor(i/level.cols)&&level.end.pillar?.col===i%level.cols?'归处，':''}${p.sync?'同步柱，':''}第${Math.floor(i/level.cols)+1}行第${i%level.cols+1}列石柱，高度${p.height}，${p.fixed?'固定高度，不可点击':'下一次'+(nextDirection(p,level.maxHeight)===1?'上升':'下降')}`);
     b.disabled=p.fixed||p.blocked||phase!=='playing'||(level.type==='challenge'&&level.maxClicks!=null&&game.clickCount>=level.maxClicks);
     b.classList.toggle('highlight',i===selectedHint);
   }
@@ -479,7 +461,7 @@ function clickPillar(row,col){
   selectedHint=-1;clearHoverPreview();phase='moving';
   boardTween={start:performance.now(),duration:reduced?1:420,affected};
   $('status-title').textContent='连接起点和终点';
-  $('hint').textContent=bridgeDemo?'青桥每升降一级就转向，只能沿桥面方向通行。':level.pillars.flat().some(p=>p.fixed)?'可动石柱升降一级，灰褐刻字的石台保持不变。':'石柱上升或下降一级；高度相差不超过一级即可相连。';
+  $('hint').textContent=level.pillars.flat().some(p=>p.fixed)?'可动石柱升降一级，灰褐刻字的石台保持不变。':'石柱上升或下降一级；高度相差不超过一级即可相连。';
   updateUI();
 }
 function undo(){
@@ -525,7 +507,7 @@ function confirm(){
   if(game.status==='lost'){$('status-title').textContent='步数已用完';$('hint').textContent='这一步没能连成路，可以撤销，或重新开始本关。';return;}
   if(!game.confirm()){
     $('status-title').textContent='道路还未相连';
-    $('hint').textContent=bridgeDemo?'检查青桥朝向和两端高差，试试俯视找断点。':level.end.pillar?'连到小亭所在石柱即可，相邻高度差需不超过一级。':'从起点连到归处，相邻石柱的高度差需不超过一级。';return;
+    $('hint').textContent=level.end.pillar?'连到小亭所在石柱即可，相邻高度差需不超过一级。':'从起点连到归处，相邻石柱的高度差需不超过一级。';return;
   }
   if(gi==='button:confirm')shell.guideEvent('confirm'); // 引导最后一步：连接道路成功后关闭教学
   playRouteSound();
@@ -851,8 +833,7 @@ function frame(now){
 try{
   // 支持 ?level=N 直接加载指定关卡（1-based，默认第 1 关，用于验收/调试）
   const qs = new URLSearchParams(location.search).get('level');
-  if (bridgeDemo) levelIndex = demoNumber - 1;
-  else if (qs != null) {
+  if (qs != null) {
     const n = Number(qs);
     if (Number.isInteger(n) && n >= 1 && n <= LEVELS.length) levelIndex = n - 1;
   }
@@ -860,7 +841,7 @@ try{
   $('loading').classList.add('loaded');
   $('loading').setAttribute('aria-hidden','true');
   loadCharacter();
-  shell=createGameShell({levels:LEVELS,demo:bridgeDemo,getLevelIndex:()=>levelIndex,start(index){const from=levelIndex;levelIndex=index;reset(from);},next:confirm,setGuideTargets});
+  shell=createGameShell({levels:LEVELS,getLevelIndex:()=>levelIndex,start(index){const from=levelIndex;levelIndex=index;reset(from);},next:confirm,setGuideTargets});
 }catch(error){
   console.error(error);$('loading').classList.add('loaded');$('error').hidden=false;
 }

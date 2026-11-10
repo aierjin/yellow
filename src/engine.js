@@ -7,33 +7,18 @@
 const MAX_HEIGHT = 4;      // 方柱高度上限（4 个方块）
 const MIN_HEIGHT = 0;      // 方柱高度下限（0 = 缩回地面，无方块）
 
-// A bridge turns 90° on every one-level movement, including a bounce.
-export function bridgeAxis(pillar, height = pillar.height) {
-  if (!pillar.bridge || height % 2 === 0) return pillar.bridge;
-  return pillar.bridge === 'row' ? 'col' : 'row';
-}
-
-export function allowsBridgeExit(pillar, axis, height = pillar.height) {
-  return !pillar.bridge || bridgeAxis(pillar, height) === axis;
-}
-
-export function edgeAxis(edge) {
-  return edge === 'left' || edge === 'right' ? 'row' : 'col';
-}
-
 /* ===================== 数据结构：单根方柱 ===================== */
 class Pillar {
-  constructor(row, col, height, direction, fixed = false, blocked = false, sync = null, bridge = null) {
+  constructor(row, col, height, direction, fixed = false, blocked = false, sync = null) {
     this.fixed = Boolean(fixed);
     this.blocked = Boolean(blocked);this.sync = sync;
-    this.bridge = bridge;
     this.row = row;
     this.col = col;
     this.height = height;          // 当前高度 0..4
     this.direction = direction;    // +1 向上 / -1 向下（下一次被直接激活时的运动方向）
   }
   clone() {
-    return new Pillar(this.row, this.col, this.height, this.direction, this.fixed, this.blocked, this.sync, this.bridge);
+    return new Pillar(this.row, this.col, this.height, this.direction, this.fixed, this.blocked, this.sync);
   }
 }
 
@@ -56,7 +41,7 @@ class Level {
       const rowArr = [];
       for (let c = 0; c < this.cols; c++) {
         const p = def.pillars[r][c];
-        rowArr.push(new Pillar(r, c, p.height, p.direction, p.fixed, p.blocked, p.sync, p.bridge));
+        rowArr.push(new Pillar(r, c, p.height, p.direction, p.fixed, p.blocked, p.sync));
       }
       this.pillars.push(rowArr);
     }
@@ -67,7 +52,7 @@ class Level {
       maxClicks: this.maxClicks, maxHeight: this.maxHeight,
       number: this.number, name: this.name,
       start: { ...this.start }, end: { ...this.end },
-      pillars: this.pillars
+      pillars: this.pillars.map(row => row.map(p => ({ height: p.height, direction: p.direction, fixed: p.fixed, blocked: p.blocked, sync: p.sync })))
     };
     return new Level(def);
   }
@@ -178,8 +163,6 @@ const PathfindingSystem = {
 
     // 起点到入口的高度差检查
     if (Math.abs(start.height - entry.height) > 1) return null;
-    if (!start.pillar && !allowsBridgeExit(entry, edgeAxis(start.edge))) return null;
-    if (!end.pillar && !allowsBridgeExit(exit, edgeAxis(end.edge))) return null;
 
     // BFS 在方柱网格内搜索（从入口到出口）
     const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
@@ -197,8 +180,6 @@ const PathfindingSystem = {
         const nr = r + dr, nc = c + dc;
         if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
         if (visited[nr][nc] || level.pillars[nr][nc].blocked) continue;
-        const axis = dr ? 'col' : 'row';
-        if (!allowsBridgeExit(level.pillars[r][c], axis) || !allowsBridgeExit(level.pillars[nr][nc], axis)) continue;
         if (Math.abs(level.pillars[nr][nc].height - h) > 1) continue;
         visited[nr][nc] = true;
         parent[nr][nc] = [r, c];

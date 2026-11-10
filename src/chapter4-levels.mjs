@@ -250,115 +250,6 @@ export const CHAPTER4 = [
     "rows": 4,
     "cols": 4,
     "maxHeight": 4,
-    "type": "normal",
-    "start": {
-      "edge": "bottom",
-      "index": 0,
-      "height": 0
-    },
-    "end": {
-      "pillar": {
-        "row": 0,
-        "col": 3
-      }
-    },
-    "pillars": [
-      [
-        {
-          "height": 4,
-          "direction": -1
-        },
-        {
-          "height": 4,
-          "direction": -1
-        },
-        {
-          "height": 1,
-          "direction": -1
-        },
-        {
-          "height": 4,
-          "direction": -1
-        }
-      ],
-      [
-        {
-          "height": 3,
-          "direction": -1
-        },
-        {
-          "height": 1,
-          "direction": 1
-        },
-        {
-          "height": 0,
-          "direction": 1
-        },
-        {
-          "height": 1,
-          "direction": -1
-        }
-      ],
-      [
-        {
-          "height": 0,
-          "direction": 1
-        },
-        {
-          "height": 2,
-          "direction": -1
-        },
-        {
-          "height": 0,
-          "direction": 1
-        },
-        {
-          "height": 3,
-          "direction": -1
-        }
-      ],
-      [
-        {
-          "height": 3,
-          "direction": -1
-        },
-        {
-          "height": 4,
-          "direction": -1
-        },
-        {
-          "height": 1,
-          "direction": 1
-        },
-        {
-          "height": 2,
-          "direction": -1
-        }
-      ]
-    ],
-    "tip": "地图变大了，仍先看两端，再找能兼顾沿途的联动。",
-    "minMoves": 4,
-    "solution": [
-      3,
-      3,
-      9,
-      9
-    ],
-    "coverageBudget": 5,
-    "coverage": {
-      "allSolutionsWalkEveryColumn": true,
-      "walkColumns": 4,
-      "examplePathLength": 7,
-      "goalInitial": 4,
-      "goalFinal": 2
-    }
-  },
-  {
-    "number": 35,
-    "name": "两种办法",
-    "rows": 4,
-    "cols": 4,
-    "maxHeight": 4,
     "type": "challenge",
     "start": {
       "edge": "bottom",
@@ -374,8 +265,190 @@ export const CHAPTER4 = [
     "pillars": [
       [
         {
+          "height": 3,
+          "direction": -1
+        },
+        {
+          "height": 2,
+          "direction": -1
+        },
+        {
+          "height": 2,
+          "direction": 1
+        },
+        {
+          "height": 0,
+          "direction": 1
+        }
+      ],
+      [
+        {
+          "height": 0,
+          "direction": 1
+        },
+        {
+          "height": 3,
+          "direction": -1
+        },
+        {
+          "height": 3,
+          "direction": 1
+        },
+        {
           "height": 4,
           "direction": -1
+        }
+      ],
+      [
+        {
+          "height": 1,
+          "direction": -1
+        },
+        {
+          "height": 2,
+          "direction": -1
+        },
+        {
+          "height": 2,
+          "direction": 1
+        },
+        {
+          "height": 3,
+          "direction": -1
+        }
+      ],
+      [
+        {
+          "height": 2,
+          "direction": 1
+        },
+        {
+          "height": 4,
+          "direction": -1
+        },
+        {
+          "height": 1,
+          "direction": -1
+        },
+        {
+          "height": 0,
+          "direction": 1
+        }
+      ]
+    ],
+    "tip": "地图变大了，仍先看两端，再找能兼顾沿途的联动。",
+    "minMoves": 6,
+    "solution": [
+      8,
+      9,
+      9,
+      9,
+      13,
+      13
+    ],
+    "coverageBudget": 10,
+    "coverage": {
+      "allSolutionsWalkEveryColumn": true,
+      "walkColumns": 4,
+      "examplePathLength": 11,
+      "goalInitial": 0,
+      "goalFinal": 1
+    },
+    "maxClicks": 10
+  },
+  {
+    "number": 35,
+    "name": "两种办法",
+    "rows": 5,
+    "cols": 5,
+    "maxHeight": 4,
+    "type": "challenge",
+    "start": {
+      "edge": "bottom",
+      "index": 0,
+      "height": 0
+    },
+    "end": {
+      "pillar": {
+        "row": 0,
+        "col": 4
+      }
+    },
+    "pillars": [
+      [
+        {
+          "height": 2,
+          "direction": -1
+        },
+        {
+          "height": 1,
+          "direction": 1
+        },
+        {
+          "height": 3,
+          "direction": -1
+        },
+        {
+          "height": 4,
+          "direction": -1
+        },
+        {
+          "height": 0,
+          "direction": 1
+        }
+      ],
+      [
+        {
+          "height": 0,
+          "direction": 1
+        },
+        {
+          "height": 3,
+          "direction": 1
+        },
+        {
+          "height": 1,
+          "direction": -1
+        },
+        {
+          "height": 4,
+          "direction": -1
+        },
+        {
+          "height": 1,
+          "direction": 1
+        }
+      ],
+      [
+        {
+          "height": 0,
+          "direction": 1
+        },
+        {
+          "height": 0,
+          "direction": 1
+        },
+        {
+          "height": 2,
+          "direction": 1
+        },
+        {
+          "height": 3,
+          "direction": 1
+        },
+        {
+          "height": 3,
+          "direction": 1
+        }
+      ],
+      [
+        {
+          "height": 1,
+          "direction": 1
+        },
+        {
+          "height": 0,
+          "direction": 1
         },
         {
           "height": 4,
@@ -386,53 +459,13 @@ export const CHAPTER4 = [
           "direction": 1
         },
         {
-          "height": 3,
-          "direction": -1
-        }
-      ],
-      [
-        {
-          "height": 1,
-          "direction": 1
-        },
-        {
-          "height": 2,
-          "direction": 1
-        },
-        {
-          "height": 4,
-          "direction": -1
-        },
-        {
           "height": 1,
           "direction": 1
         }
       ],
       [
         {
-          "height": 2,
-          "direction": 1
-        },
-        {
           "height": 3,
-          "direction": 1
-        },
-        {
-          "height": 4,
-          "direction": -1
-        },
-        {
-          "height": 3,
-          "direction": -1
-        }
-      ],
-      [
-        {
-          "height": 4,
-          "direction": -1
-        },
-        {
-          "height": 2,
           "direction": 1
         },
         {
@@ -440,41 +473,55 @@ export const CHAPTER4 = [
           "direction": 1
         },
         {
-          "height": 3,
+          "height": 0,
+          "direction": 1
+        },
+        {
+          "height": 2,
+          "direction": 1
+        },
+        {
+          "height": 1,
           "direction": 1
         }
       ]
     ],
     "tip": "可以调整道路，也可以多调归处；比较整条路的代价。",
-    "maxClicks": 5,
+    "maxClicks": 7,
     "strategies": {
       "road": [
-        7,
-        9,
-        9,
-        9
+        1,
+        10,
+        16,
+        16,
+        21,
+        21
       ],
       "destination": [
-        4,
-        14,
-        14,
-        14
+        5,
+        1,
+        16,
+        16,
+        21,
+        21
       ]
     },
-    "minMoves": 4,
+    "minMoves": 6,
     "solution": [
-      4,
-      14,
-      14,
-      14
+      1,
+      5,
+      16,
+      16,
+      21,
+      21
     ],
-    "coverageBudget": 5,
+    "coverageBudget": 7,
     "coverage": {
       "allSolutionsWalkEveryColumn": true,
-      "walkColumns": 4,
-      "examplePathLength": 9,
-      "goalInitial": 3,
-      "goalFinal": 2
+      "walkColumns": 5,
+      "examplePathLength": 15,
+      "goalInitial": 0,
+      "goalFinal": 1
     }
   },
   {

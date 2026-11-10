@@ -4,17 +4,30 @@ import {CHAPTER4} from '../src/chapter4-levels.mjs';import {LEVELS} from '../src
 import {searchLevel} from '../src/exact-search.mjs';
 import {Level,GameState,PathfindingSystem} from '../src/engine.js';
 import {solve,verifySolution} from '../src/solver.mjs';import {planRoute} from '../src/route.mjs';
-test('31–38 minima and exact solutions agree with independent BFS',()=>{
+test('31–38 exact minima and playable solutions; smaller boards also agree with BFS',()=>{
  assert.ok(LEVELS.length>=38);assert.deepEqual(LEVELS.slice(30,38),CHAPTER4.map(withPracticeLimit));
- for(const d of CHAPTER4){assert.equal(d.rows,d.number<=33?3:4);assert.ok(d.minMoves>=(d.rows===3?3:4));
+ for(const d of CHAPTER4){assert.equal(d.rows,d.number===35?5:d.number<=33?3:4);assert.ok(d.minMoves>=(d.rows===3?3:4));
   assert.equal(searchLevel(d,d.minMoves).minMoves,d.minMoves);
-  const bfs=solve(new Level(d),{maxDepth:d.minMoves,maxStates:500000});assert.equal(bfs.minClicks,d.minMoves,`L${d.number} ${JSON.stringify(bfs)}`);
+  if(![34,35].includes(d.number)){
+   const bfs=solve(new Level(d),{maxDepth:d.minMoves,maxStates:500000});assert.equal(bfs.minClicks,d.minMoves,`L${d.number} ${JSON.stringify(bfs)}`);
+  }
   assert.ok(verifySolution(new Level(d),d.solution));assert.ok(d.tip);assert.equal(PathfindingSystem.hasPath(new Level(d)),false);
+ }
+});
+test('34 and 35 have the requested budgets and preserve ordinary pillars with a movable goal',()=>{
+ for(const number of [34,35]){
+  const d=LEVELS[number-1];
+  assert.equal(d.minMoves,6);
+  assert.equal(d.maxClicks,number===34?10:7);
+  assert.equal(d.cols,number===34?4:5);
+  assert.ok(d.end.pillar);
+  assert.ok(d.pillars.flat().every(p=>!p.fixed&&!p.blocked&&!p.sync&&!p.bridge));
  }
 });
 test('allowed budget cannot ignore a column; example walking routes cover every column',()=>{
  for(const d of CHAPTER4){
-  if(d.maxClicks)assert.ok(d.maxClicks-d.minMoves>=1&&d.maxClicks-d.minMoves<=2);
+  if(d.number===34)assert.equal(d.maxClicks,10);
+  else if(d.maxClicks)assert.ok(d.maxClicks-d.minMoves>=1&&d.maxClicks-d.minMoves<=2);
   for(let c=0;c<d.cols;c++)assert.equal(searchLevel(d,d.coverageBudget,{omitColumn:c}).solution,null,`L${d.number} column ${c}`);
   for(let c=0;c<d.cols;c++)assert.equal(searchLevel(d,d.coverageBudget,{pathOmitColumn:c}).solution,null);
   const g=new GameState(new Level(d));for(const id of d.solution)g.click(Math.floor((id-1)/d.cols),(id-1)%d.cols);
