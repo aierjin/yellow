@@ -19,6 +19,7 @@ import { getLighting, interpolateLighting, rgbToCss } from './lighting.mjs';
 import { createCameraState, dragCamera, dragOrbit, toggleTopView, restoreCamera } from './camera-state.mjs';
 import { createGesture, moveGesture, cancelGesture, releaseGesture } from './pointer-gesture.mjs';
 import { previewOperation } from './preview.mjs';
+import { playPillarSound, playRouteSound } from './game-sounds.mjs';
 
 const $ = id => document.getElementById(id);
 let shell=null;
@@ -454,6 +455,8 @@ function clickPillar(row,col){
     if(!keyButtons[row*level.cols+col]?.classList.contains('guide-flash'))return;
   }
   const affected=game.click(row,col);if(!affected)return;
+  const clickedPillar=affected[0]; // The chain reaction lists the selected pillar first.
+  playPillarSound(clickedPillar.toHeight>clickedPillar.fromHeight);
   if(shell?.guideInteract?.()==='pillar')shell.guideEvent('pillar');
   selectedHint=-1;clearHoverPreview();phase='moving';
   boardTween={start:performance.now(),duration:reduced?1:420,affected};
@@ -506,6 +509,7 @@ function confirm(){
     $('hint').textContent=level.end.pillar?'连到小亭所在石柱即可，相邻高度差需不超过一级。':'从起点连到归处，相邻石柱的高度差需不超过一级。';return;
   }
   if(gi==='button:confirm')shell.guideEvent('confirm'); // 引导最后一步：连接道路成功后关闭教学
+  playRouteSound();
   phase='revealing';selectedHint=-1;clearHoverPreview();clearActiveGesture();
   homeTransition={from:{yaw:cameraState.yaw,pitch:cameraState.pitch},start:performance.now()};
   cameraState.top=false;
