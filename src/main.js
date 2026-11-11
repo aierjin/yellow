@@ -368,6 +368,24 @@ function reset(fromIndex){
     syncDestination();
   }else endPoint=fixedPlatform({type:'end',height:level.end.height},true);
   startLabel.innerHTML=`<span class="marker-name">起点</span><span class="endpoint-height">${level.start.height}</span>`;endLabel.innerHTML=`<span class="marker-name">归处</span><span class="endpoint-height">${level.end.height??''}</span>`;startLabel.setAttribute('aria-label',`起点，高度 ${level.start.height}`);endLabel.setAttribute('aria-label',level.end.pillar?'归处':`归处，高度 ${level.end.height}`);
+  if (level.start.branchRow != null) {
+    const first = level.rows;
+    const last = level.cols - level.rows - 1;
+    for (let row = 0; row < level.rows; row++) {
+      for (let col = first; col <= last; col++) {
+        const current = level.pillars[row][col];
+        if (!current.fixed || current.blocked) continue;
+        for (const [dr, dc] of [[1, 0], [0, 1]]) {
+          const next = level.pillars[row + dr]?.[col + dc];
+          if (col + dc > last || !next?.fixed || next.blocked || next.height !== current.height) continue;
+          const from = worldPoint(level, {type:'pillar',row,col,height:current.height});
+          const to = worldPoint(level, {type:'pillar',row:row+dr,col:col+dc,height:next.height});
+          box(board, dc ? CELL : .46, .08, dr ? CELL : .46,
+            (from.x+to.x)/2, from.y+.025, (from.z+to.z)/2, routeStone);
+        }
+      }
+    }
+  }
   placeCharacterAtStart();placeTarget();resize();
   // 求解当前关初始局面的最少点击次数（一次性，非当前局面的剩余最短距离）
   const sol = LEVELS[levelIndex].minMoves ? {solvable:true,minClicks:LEVELS[levelIndex].minMoves} : solve(level.clone(), { maxDepth: level.maxClicks != null ? level.maxClicks : 8 });
@@ -631,8 +649,8 @@ function hint(){
     playHintSound();
     selectedHint=found;hintUntil=performance.now()+5000;
     const col = found % level.cols;
-    const side = dualRoute ? (col < 4 ? '俯视图左侧' : '俯视图右侧') : '';
-    const displayCol = dualRoute && col > 4 ? col - 4 : col + 1;
+    const side = dualRoute ? (col < level.rows ? '俯视图左侧' : '俯视图右侧') : '';
+    const displayCol = dualRoute && col >= level.cols - level.rows ? col - (level.cols - level.rows) + 1 : col + 1;
     $('hint').textContent=`试试${side}第 ${Math.floor(found/level.cols)+1} 行、第 ${displayCol} 列的石柱。`;
   }
   else $('hint').textContent='暂未找到短路线，可以撤销几步，或重新开始。';

@@ -5,7 +5,7 @@ test('47–55 minima independently verified, budgets and all-column routes',()=>
  assert.equal(LEVELS.length,60);
  for(const d of FINALE_LEVELS){assert.equal(searchLevel(d,d.minMoves).minMoves,d.minMoves);assert.equal(solve(new Level(d),{maxDepth:d.minMoves,maxStates:500000}).minClicks,d.minMoves);assert.ok(verifySolution(new Level(d),d.solution));assert.ok(d.tip&&d.discovery);assert.ok(!d.end.pillar);assert.ok(d.minMoves>=(d.rows===3?3:4));
  const path=PathfindingSystem.findPath(play(d)).filter(p=>p.type==='pillar');assert.equal(new Set(path.map(p=>p.col)).size,d.cols);assert.ok(d.solution.every(id=>{const p=d.pillars.flat()[id-1];return !p.fixed&&!p.blocked;}));
- const current=LEVELS[d.number-1],budget=current.maxClicks;assert.ok(budget>current.minMoves);if(d.type==='challenge')assert.ok(budget<=current.minMoves+2);
+ const current=LEVELS[d.number-1],budget=current.maxClicks;assert.ok(current.start.platform?budget===current.minMoves:budget>current.minMoves);if(d.type==='challenge')assert.ok(budget<=current.minMoves+2);
  }
 });
 test('every finale fixed anchor is necessary in optimal roads and its immutability matters',()=>{

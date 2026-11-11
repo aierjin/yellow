@@ -17,6 +17,20 @@ export function searchLevel(d,limit,{omitColumn=-1,pathOmitColumn=omitColumn,all
   const groups=new Set(base.map(j=>data[j].sync).filter(Boolean));
   return [...new Set([...base,...data.flatMap((p,j)=>!fixed[j]&&!holes[j]&&p.sync&&groups.has(p.sync)?[j]:[])])];
  });
- function dfs(left,start){if(left===0){checked++;return path();}for(let k=start;k<actions.length;k++){const i=actions[k],cells=operations[i];for(const j of cells)a[j]=(a[j]+1)%period;seq.push(i+1);const ok=dfs(left-1,k);for(const j of cells)a[j]=(a[j]+period-1)%period;if(ok)return true;seq.pop();}return false;}
+ const touchesBoth = operations.some(cells => cells.includes(entry) && cells.includes(exit));
+ function endpointDistance(index, height) {
+   if (Math.abs(hs(a[index]) - height) <= 1) return 0;
+   if (fixed[index]) return Infinity;
+   for (let steps = 1; steps < period; steps++) {
+     if (Math.abs(hs((a[index] + steps) % period) - height) <= 1) return steps;
+   }
+   return Infinity;
+ }
+ function dfs(left,start){
+   const startDistance = endpointDistance(entry, d.start.height);
+   const endDistance = d.end.pillar ? 0 : endpointDistance(exit, d.end.height);
+   const lowerBound = touchesBoth ? Math.max(startDistance, endDistance) : startDistance + endDistance;
+   if (lowerBound > left) return false;
+   if(left===0){checked++;return path();}for(let k=start;k<actions.length;k++){const i=actions[k],cells=operations[i];for(const j of cells)a[j]=(a[j]+1)%period;seq.push(i+1);const ok=dfs(left-1,k);for(const j of cells)a[j]=(a[j]+period-1)%period;if(ok)return true;seq.pop();}return false;}
  for(let depth=0;depth<=limit;depth++)if(dfs(depth,0))return {minMoves:depth,solution:[...seq],complete:true,checked};return {solution:null,minMoves:null,complete:true,checked};
 }
