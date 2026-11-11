@@ -11,8 +11,9 @@ export function worldPoint(level, node) {
     z = node.row * CELL - oz;
   } else {
     const def = node.type === 'start' ? level.start : level.end;
-    if (def.pillar) {
-      x = def.pillar.col * CELL - ox; z = def.pillar.row * CELL - oz;
+    const cell = def.platform ?? def.pillar;
+    if (cell) {
+      x = cell.col * CELL - ox; z = cell.row * CELL - oz;
     } else if (def.edge === 'bottom' || def.edge === 'top') {
       x = def.index * CELL - ox;
       z = def.edge === 'bottom' ? oz + CELL : -oz - CELL;

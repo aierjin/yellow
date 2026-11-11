@@ -7,6 +7,7 @@ import {createGameShell} from './game-shell.mjs';
 import * as THREE from 'three';
 import { Level, GameState, PathfindingSystem, ChainReactionSystem } from './engine.js';
 import { LEVELS } from './levels.js';
+import { dualRouteHint } from './dual-route-level.mjs';
 import { planRoute, worldPoint, CELL, HEIGHT, WIDTH } from './route.mjs';
 import { loadStairCharacter } from './character.mjs';
 import { createWalkTimeline, sampleWalk, walkingFootY } from './walk-route.mjs';
@@ -165,7 +166,7 @@ function makeEnvironment(){
   const irregular=level.pillars.flat().some(p=>p.blocked);
   if(irregular){
     for(let r=0;r<level.rows;r++)for(let c=0;c<level.cols;c++){
-      if(level.pillars[r][c].blocked)continue;
+      if(level.pillars[r][c].blocked || isPlatformCell(r, c))continue;
       const x=(c-(level.cols-1)/2)*CELL,z=(r-(level.rows-1)/2)*CELL;
       box(env,CELL,.20,CELL,x,-.14,z,cap);box(env,CELL,.55,CELL,x,-.5,z,warm);
       box(env,CELL,.11,CELL,x,-.82,z,rose);box(env,CELL,.9,CELL,x,-1.31,z,rose);
@@ -258,10 +259,14 @@ function fixedHeightMark(group,height){
  for(let side=0;side<4;side++){const a=side*Math.PI/2,mesh=new THREE.Mesh(new THREE.PlaneGeometry(2.46,1.23),material);mesh.position.set(Math.sin(a)*(WIDTH-.04+.005)/2,height*HEIGHT-.75,Math.cos(a)*(WIDTH-.04+.005)/2);mesh.rotation.y=a;group.add(mesh);}
 }
 
+function isPlatformCell(row, col) {
+  return [level.start.platform, level.end.platform].some(cell => cell?.row === row && cell.col === col);
+}
+
 function makePillar(row,col){
   const ox=(level.cols-1)*CELL/2, oz=(level.rows-1)*CELL/2;
   const group=new THREE.Group();group.position.set(col*CELL-ox,0,row*CELL-oz);board.add(group);
-  if(level.pillars[row][col].blocked){
+  if(level.pillars[row][col].blocked || isPlatformCell(row, col)){
     const b=document.createElement('button');b.className='pillar-key blocked-key';b.disabled=true;b.hidden=true;
     b.innerHTML='<span class="digit"></span><span class="height-label"></span><span class="direction"></span>';
     $('pillar-controls').appendChild(b);keyButtons.push(b);return {group,row,col,blocked:true,displayHeight:0};
@@ -608,8 +613,9 @@ function hint(){
   const queue=[{level:level.clone(),first:null,depth:0,steps:[]}],visited=new Set();
   const source=LEVELS[levelIndex], key=levelIndex+'|'+boardKey(level), remaining=level.maxClicks==null?Infinity:level.maxClicks-game.clickCount;
   const route=hintPlans.get(key)??continuation(level,source);
-  let found=route?.length&&route.length<=remaining?route[0]-1:null;
-  search:for(let head=0;found===null&&head<queue.length&&head<1200;head++){
+  const dualRoute = Boolean(level.start.platform);
+  let found = dualRoute ? dualRouteHint(level, remaining) : (route?.length && route.length <= remaining ? route[0] - 1 : null);
+  search:for(let head=0;!dualRoute&&found===null&&head<queue.length&&head<1200;head++){
     const node=queue[head];if(node.depth>=Math.min(4,remaining))continue;
     for(let r=0;r<level.rows;r++)for(let c=0;c<level.cols;c++){
       if(node.level.pillars[r][c].fixed||node.level.pillars[r][c].blocked)continue;
@@ -624,7 +630,10 @@ function hint(){
   if(found!==null){
     playHintSound();
     selectedHint=found;hintUntil=performance.now()+5000;
-    $('hint').textContent=`试试第 ${Math.floor(found/level.cols)+1} 行、第 ${found%level.cols+1} 列的石柱。`;
+    const col = found % level.cols;
+    const side = dualRoute ? (col < 4 ? '俯视图左侧' : '俯视图右侧') : '';
+    const displayCol = dualRoute && col > 4 ? col - 4 : col + 1;
+    $('hint').textContent=`试试${side}第 ${Math.floor(found/level.cols)+1} 行、第 ${displayCol} 列的石柱。`;
   }
   else $('hint').textContent='暂未找到短路线，可以撤销几步，或重新开始。';
   updateUI();if(gi==='button:hint'&&found!==null)shell.guideEvent('hint');
@@ -636,7 +645,7 @@ function placeLabel(el,p,dy=0){
 function updateCamera(){
   document.body.classList.toggle("top-view",cameraState.top);
   const target = new THREE.Vector3(0,.28,0);
-  if(cameraState.top){camera.up.set(-Math.sin(cameraState.yaw),0,-Math.cos(cameraState.yaw));camera.position.set(0,22,.00001);}
+  if(cameraState.top){if(level?.start.platform)camera.up.set(0,0,-1);else camera.up.set(-Math.sin(cameraState.yaw),0,-Math.cos(cameraState.yaw));camera.position.set(0,22,.00001);}
   else {camera.up.set(0,1,0);const radius=19,flat=radius*Math.cos(cameraState.pitch);camera.position.set(Math.sin(cameraState.yaw)*flat,.28+radius*Math.sin(cameraState.pitch),Math.cos(cameraState.yaw)*flat);}
   camera.lookAt(target);
   camera.updateMatrixWorld();

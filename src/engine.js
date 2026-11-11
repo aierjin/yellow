@@ -216,7 +216,7 @@ const PathfindingSystem = {
 
     // 组装完整路径：起点 → 方柱 → 终点
     const full = [{ type: 'start', height: start.height }];
-    for (const p of pathPillars) full.push({ type: 'pillar', row: p.row, col: p.col, height: p.height });
+    for (const p of pathPillars.slice(start.platform ? 1 : 0, end.platform ? -1 : undefined)) full.push({ type: 'pillar', row: p.row, col: p.col, height: p.height });
     if (!end.pillar) full.push({ type: 'end', height: end.height });
     return full;
   },
@@ -229,7 +229,8 @@ const PathfindingSystem = {
   /** 由 edge 定义找到棋盘上对应的入口/出口方柱 */
   _edgePillar(level, edgeDef) {
     const rows = level.rows, cols = level.cols;
-    if (edgeDef.pillar) return level.pillars[edgeDef.pillar.row]?.[edgeDef.pillar.col] ?? null;
+    const cell = edgeDef.platform ?? edgeDef.pillar;
+    if (cell) return level.pillars[cell.row]?.[cell.col] ?? null;
     const e = edgeDef.edge;
     const idx = edgeDef.index;
     let r, c;
